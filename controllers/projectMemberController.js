@@ -1,4 +1,4 @@
-const { ProjectMember, Project, User } = require("../models");
+const { ProjectMember, Project, User, Role } = require("../models");
 
 // Assign User to Project
 const assignMember = async (req, res) => {
@@ -165,9 +165,170 @@ const removeMember = async (req, res) => {
     }
 };
 
+const getAllProjectMembers = async (req, res) => {
+  try {
+
+    const members = await ProjectMember.findAll({
+      include: [
+        {
+          model: Project,
+          as: "project",
+          attributes: ["id", "title"],
+        },
+        {
+          model: User,
+          as: "user",
+          attributes: ["id", "name", "email"],
+          include: [
+            {
+              model: Role,
+              as: "role",
+              attributes: ["id", "name"],
+            },
+          ],
+        },
+      ],
+    });
+
+    return res.status(200).json({
+      success: true,
+      count: members.length,
+      members,
+    });
+
+  } catch (error) {
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+
+  }
+};
+
+const getProjectMemberById = async (req, res) => {
+  try {
+
+    const { id } = req.params;
+
+    const member = await ProjectMember.findByPk(id, {
+      include: [
+        {
+          model: Project,
+          as: "project",
+          attributes: ["id", "title"],
+        },
+        {
+          model: User,
+          as: "user",
+          attributes: ["id", "name", "email"],
+          include: [
+            {
+              model: Role,
+              as: "role",
+              attributes: ["id", "name"],
+            },
+          ],
+        },
+      ],
+    });
+
+    if (!member) {
+      return res.status(404).json({
+        success: false,
+        message: "Assignment not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      member,
+    });
+
+  } catch (error) {
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+
+  }
+};
+const updateProjectMember = async (req, res) => {
+  try {
+
+    const { id } = req.params;
+    const { project_id, user_id } = req.body;
+
+    const member = await ProjectMember.findByPk(id);
+
+    if (!member) {
+      return res.status(404).json({
+        success: false,
+        message: "Assignment not found",
+      });
+    }
+
+    const project = await Project.findByPk(project_id);
+
+    if (!project) {
+      return res.status(404).json({
+        success: false,
+        message: "Project not found",
+      });
+    }
+
+    const user = await User.findByPk(user_id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Prevent duplicate assignment
+    const alreadyAssigned = await ProjectMember.findOne({
+      where: {
+        project_id,
+        user_id,
+      },
+    });
+
+    if (alreadyAssigned && alreadyAssigned.id !== Number(id)) {
+      return res.status(409).json({
+        success: false,
+        message: "User already assigned to this project",
+      });
+    }
+
+    await member.update({
+      project_id,
+      user_id,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Assignment updated successfully",
+      member,
+    });
+
+  } catch (error) {
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+
+  }
+};
+
 module.exports = {
-    assignMember,
-    getProjectMembers,
-    getUserProjects,
-    removeMember
+  assignMember,
+  getAllProjectMembers,
+  getProjectMemberById,
+  getProjectMembers,
+  getUserProjects,
+  updateProjectMember,
+  removeMember,
 };

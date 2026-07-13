@@ -3,20 +3,68 @@ const express = require("express");
 const router = express.Router();
 
 const {
-    assignMember,
-    getProjectMembers,
-    getUserProjects,
-    removeMember
+  assignMember,
+  getAllProjectMembers,
+  getProjectMemberById,
+  getProjectMembers,
+  getUserProjects,
+  updateProjectMember,
+  removeMember,
 } = require("../controllers/projectMemberController");
 
 const authMiddleware = require("../middlewares/authMiddleware");
+const authorizeRoles = require("../middlewares/roleMiddleware");
 
-router.post("/", authMiddleware, assignMember);
+// Assign Member
+router.post(
+  "/",
+  authMiddleware,
+  authorizeRoles("Admin", "Project Manager"),
+  assignMember
+);
 
-router.get("/project/:projectId", authMiddleware, getProjectMembers);
+// Get All Assignments
+router.get(
+  "/",
+  authMiddleware,
+  getAllProjectMembers
+);
 
-router.get("/user/:id", authMiddleware, getUserProjects);
+// Get Single Assignment
+router.get(
+  "/:id",
+  authMiddleware,
+  getProjectMemberById
+);
 
-router.delete("/:id", authMiddleware, removeMember);
+// Get Members of Specific Project
+router.get(
+  "/project/:projectId",
+  authMiddleware,
+  getProjectMembers
+);
+
+// Get Projects of Specific User
+router.get(
+  "/user/:id",
+  authMiddleware,
+  getUserProjects
+);
+
+// Update Assignment
+router.put(
+  "/:id",
+  authMiddleware,
+  authorizeRoles("Admin", "Project Manager"),
+  updateProjectMember
+);
+
+// Delete Assignment
+router.delete(
+  "/:id",
+  authMiddleware,
+  authorizeRoles("Admin", "Project Manager"),
+  removeMember
+);
 
 module.exports = router;
