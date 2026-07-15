@@ -6,7 +6,7 @@ const projectMemberRoutes = require("./routes/projectMemberRoutes");
 const taskRoutes = require("./routes/taskRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const userRoutes = require("./routes/userRoutes");
-
+const roleRoutes = require("./routes/roleRoutes");
 
 const express = require("express");
 const cors = require("cors");
@@ -29,6 +29,7 @@ app.use("/api/project-members", projectMemberRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/roles", roleRoutes);
 
 sequelize
   .authenticate()
